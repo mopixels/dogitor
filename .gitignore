@@ -1,3 +1,16 @@
 /target
-
-.vscode
+/clips
+config.toml
+*.mp4
+*.jpg
+*.jpeg
+.env
+# Self-signed cert/key MediaMTX generates in its working directory.
+auto.key
+auto.crt
+# local secrets / machine files
+*.key
+*.crt
+.DS_Store
+.claude/settings.local.json
+/dist

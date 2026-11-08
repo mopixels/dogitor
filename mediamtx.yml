@@ -1,0 +1,68 @@
+# MediaMTX configuration for Dogitor's single-camera fan-out.
+#
+# Dogitor's Rust process is the only thing that opens the camera: it runs one
+# FFmpeg publisher (camera video + cpal PCM audio) that pushes to the `cam`
+# path below. MediaMTX then fans that one stream out to:
+#   - the app's live view over WebRTC/WHEP, and
+#   - Dogitor's clip/snapshot readers (which read RTSP, never the camera).
+# Recording is driven by Dogitor (a copy-reader), not by MediaMTX, so each
+# detected event becomes exactly one MP4.
+#
+# Tested against MediaMTX v1.19. Run with:  mediamtx /path/to/mediamtx.yml
+
+logLevel: info
+
+# --- Authentication ----------------------------------------------------------
+# MediaMTX asks Dogitor's API whether each publish/read is allowed (see
+# `media_allowed` in src/api.rs):
+#   - localhost (Dogitor's own FFmpeg publisher and clip/snapshot readers):
+#     may publish and read;
+#   - tailnet devices (100.64.0.0/10): may only READ (watch live), and only
+#     with the API token: `Authorization: Bearer <token>` on the WHEP request,
+#     or `?token=<token>` on the WHEP URL;
+#   - everything else is denied.
+# While Dogitor isn't running, the hook is unreachable and every request is
+# denied (fail closed).
+#
+# The port must match Dogitor's [api].port. The Mac app rewrites this line on
+# every launch to match its settings; for the CLI, keep it in sync by hand.
+authMethod: http
+authHTTPAddress: http://127.0.0.1:8088/internal/mediamtx-auth
+# Send every action through the hook (the defaults exempt api/metrics/pprof).
+authHTTPExclude: []
+
+# --- RTSP ----------------------------------------------------------------------
+# The publisher writes here; the clip/snapshot readers read here. Nothing off
+# this machine needs RTSP, so it listens on localhost only, over TCP (which
+# also means no UDP RTP/RTCP ports are opened).
+rtsp: yes
+rtspAddress: 127.0.0.1:8554
+rtspTransports: [tcp]
+
+# --- WebRTC (live view / WHEP) -----------------------------------------------
+# Listens on all interfaces so the tailnet address works whatever it is; the
+# auth hook above rejects requests that don't come from the tailnet.
+webrtc: yes
+webrtcAddress: :8889
+# Advertise this machine's Tailscale IP so the ICE offer includes a candidate
+# the phone can reach directly. Because both peers are on the tailnet, NO
+# STUN/TURN is needed. Replace with the output of: tailscale ip -4
+webrtcAdditionalHosts: [100.64.0.1]
+
+# Features we don't use. MoQ is on by default since MediaMTX v1.19 and would
+# otherwise open another public listener (:8892) and write auto.key/auto.crt
+# into the working directory.
+rtmp: no
+hls: no
+srt: no
+moq: no
+api: no
+metrics: no
+pprof: no
+playback: no
+
+# --- Paths -------------------------------------------------------------------
+paths:
+  cam:
+    # Dogitor's FFmpeg publishes to this path on demand.
+    source: publisher

@@ -1,0 +1,66 @@
+name: Release
+
+# Push a tag like `v0.1.0` (matching `version` in Cargo.toml) to build the
+# universal .dmg and publish it as a GitHub Release. Run it manually from the
+# Actions tab to just build the .dmg as a workflow artifact, without releasing.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches Cargo.toml version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match Cargo.toml version $version"
+            exit 1
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Test
+        run: cargo test --locked
+
+      - name: Build universal .dmg
+        run: scripts/release-mac.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dogitor-macos
+          path: dist/*
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<'MD'
+          ## Install (macOS 11+, Apple Silicon or Intel)
+
+          1. Download **Dogitor-*-universal.dmg** below, open it and drag **Dogitor** onto **Applications**.
+          2. Install the helper tools with [Homebrew](https://brew.sh): `brew install ffmpeg mediamtx`
+          3. Open Dogitor. It isn't signed with a paid Apple developer certificate, so the first launch is blocked:
+             click **Done**, then go to **System Settings → Privacy & Security → Open Anyway**. One time only.
+             (Or: `xattr -dr com.apple.quarantine /Applications/Dogitor.app`)
+          4. Follow the Settings screen: Telegram bot token, API token, camera → **Save & Start**.
+
+          See the [README](https://github.com/${{ github.repository }}#readme) for details.
+          MD
+          gh release create "$GITHUB_REF_NAME" dist/*.dmg dist/*.sha256 \
+            --title "Dogitor $GITHUB_REF_NAME" \
+            --notes-file notes.md \
+            --generate-notes

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3a4a63"/>
+      <stop offset="100%" stop-color="#1c2433"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#5c7091" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#5c7091" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="paw" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e7ecf3"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#glow)"/>
+
+  <!-- sound ring hinting at audio detection -->
+  <circle cx="512" cy="470" r="300" fill="none" stroke="#ff8a3d" stroke-opacity="0.55" stroke-width="14"/>
+
+  <!-- paw print -->
+  <g fill="url(#paw)">
+    <ellipse cx="512" cy="585" rx="150" ry="120"/>
+    <ellipse cx="366" cy="430" rx="70" ry="85" transform="rotate(-18 366 430)"/>
+    <ellipse cx="462" cy="360" rx="72" ry="90" transform="rotate(-6 462 360)"/>
+    <ellipse cx="568" cy="360" rx="72" ry="90" transform="rotate(6 568 360)"/>
+    <ellipse cx="662" cy="430" rx="70" ry="85" transform="rotate(18 662 430)"/>
+  </g>
+
+  <!-- alert dot: recording / notification cue -->
+  <circle cx="742" cy="722" r="78" fill="#ff5a3c"/>
+  <circle cx="742" cy="722" r="78" fill="none" stroke="#1c2433" stroke-width="16"/>
+</svg>

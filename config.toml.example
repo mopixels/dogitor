@@ -1,0 +1,48 @@
+# Copy this file to `config.toml` and fill in your values.
+# The bot token is best provided via the env var DOGITOR_BOT_TOKEN.
+
+[telegram]
+# Prefer the env var DOGITOR_BOT_TOKEN; or uncomment and set it here.
+# token = "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+# The bot answers exactly one chat. While this is unset, the first chat to send
+# /start claims it (until restart); paste the id it replies with here so the
+# claim is permanent and nobody else can take it after a restart.
+# chat_id = 123456789
+
+[audio]
+trigger_db = -30.0        # start recording when level rises above this dBFS
+quiet_db = -40.0          # consider it "quiet" below this dBFS
+trigger_hold_secs = 0.3   # sound must stay loud this long before triggering
+quiet_timeout_secs = 3.0  # must stay quiet this long before recording stops
+cooldown_secs = 5         # ignore new triggers for this long after a clip
+
+[recording]
+output_dir = "clips"
+video_device = "0"        # macOS: avfoundation index (see README). Linux: /dev/video0
+width = 640
+height = 480
+framerate = 30
+max_clip_secs = 60        # hard cap on a single clip's length
+
+[api]
+# HTTP + WebSocket API for the companion app. Binds 0.0.0.0 but only answers
+# localhost and tailnet (100.64.0.0/10) clients; LAN clients get 403.
+# MediaMTX's auth hook also lives on this port: if you change it, update
+# `authHTTPAddress` in mediamtx.yml to match (the Mac app does this for you).
+port = 8088
+# Shared bearer token required on every request. Prefer the env var
+# DOGITOR_API_TOKEN; or uncomment and set it here. Use a long random,
+# URL-safe value (it may also be passed as ?token=... on WS/media URLs).
+# token = "change-me-to-a-long-random-string"
+
+[live]
+# RTSP path the publisher writes to and clip/snapshot readers read from. This
+# is local to the home machine (MediaMTX runs alongside dogitor).
+mediamtx_rtsp = "rtsp://127.0.0.1:8554/cam"
+# WHEP (WebRTC) URL advertised to the app. Use the server's Tailscale MagicDNS
+# name and MediaMTX's WebRTC port (default 8889).
+whep_url = "http://dogitor.your-tailnet.ts.net:8889/cam/whep"
+# Keep the publisher alive this long after the last viewer/recording releases it.
+live_idle_secs = 10
+# A live/start lease expires after this long unless the app refreshes it.
+lease_ttl_secs = 30
